@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque[opsz,wdth,wght].woff2")
+    format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Outfit";
+  src: url("/assets/fonts/Outfit[wght].woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Medical teal/cyan palette */
+    --background: 0.97 0.005 200;
+    --foreground: 0.18 0.03 220;
+    --card: 1 0 0;
+    --card-foreground: 0.18 0.03 220;
+    --popover: 1 0 0;
+    --popover-foreground: 0.18 0.03 220;
+    --primary: 0.48 0.12 210;
+    --primary-foreground: 0.99 0 0;
+    --secondary: 0.93 0.02 200;
+    --secondary-foreground: 0.28 0.05 220;
+    --muted: 0.94 0.01 200;
+    --muted-foreground: 0.52 0.03 210;
+    --accent: 0.88 0.08 190;
+    --accent-foreground: 0.2 0.08 215;
+    --destructive: 0.57 0.22 25;
+    --destructive-foreground: 0.99 0 0;
+    --border: 0.88 0.02 200;
+    --input: 0.88 0.02 200;
+    --ring: 0.48 0.12 210;
+
+    /* Risk colors */
+    --risk-low: 0.55 0.16 145;
+    --risk-low-bg: 0.95 0.06 145;
+    --risk-low-border: 0.75 0.12 145;
+    --risk-medium: 0.65 0.18 60;
+    --risk-medium-bg: 0.97 0.07 60;
+    --risk-medium-border: 0.78 0.14 60;
+    --risk-high: 0.56 0.22 25;
+    --risk-high-bg: 0.97 0.06 25;
+    --risk-high-border: 0.72 0.18 25;
+
+    /* Chart colors */
+    --chart-1: 0.48 0.12 210;
+    --chart-2: 0.55 0.16 145;
+    --chart-3: 0.65 0.18 60;
+    --chart-4: 0.56 0.22 25;
+    --chart-5: 0.55 0.15 280;
+
+    /* Sidebar */
+    --sidebar: 0.22 0.05 220;
+    --sidebar-foreground: 0.95 0.02 200;
+    --sidebar-primary: 0.6 0.14 200;
+    --sidebar-primary-foreground: 0.99 0 0;
+    --sidebar-accent: 0.3 0.06 220;
+    --sidebar-accent-foreground: 0.95 0.02 200;
+    --sidebar-border: 0.3 0.04 220;
+    --sidebar-ring: 0.6 0.14 200;
+
+    /* Medical theme */
+    --teal-50: 0.97 0.03 190;
+    --teal-100: 0.92 0.06 190;
+    --teal-500: 0.58 0.14 195;
+    --teal-600: 0.5 0.13 200;
+    --teal-700: 0.42 0.11 205;
+  }
+
+  .dark {
+    --background: 0.13 0.02 220;
+    --foreground: 0.95 0.01 200;
+    --card: 0.18 0.03 220;
+    --card-foreground: 0.95 0.01 200;
+    --popover: 0.22 0.03 220;
+    --popover-foreground: 0.95 0.01 200;
+    --primary: 0.65 0.14 195;
+    --primary-foreground: 0.13 0.02 220;
+    --secondary: 0.22 0.03 220;
+    --secondary-foreground: 0.95 0.01 200;
+    --muted: 0.22 0.03 220;
+    --muted-foreground: 0.65 0.04 210;
+    --accent: 0.28 0.05 215;
+    --accent-foreground: 0.9 0.02 200;
+    --destructive: 0.65 0.22 25;
+    --destructive-foreground: 0.13 0.02 220;
+    --border: 1 0 0 / 12%;
+    --input: 1 0 0 / 15%;
+    --ring: 0.65 0.14 195;
+
+    --chart-1: 0.65 0.14 195;
+    --chart-2: 0.65 0.18 145;
+    --chart-3: 0.72 0.18 65;
+    --chart-4: 0.65 0.22 28;
+    --chart-5: 0.62 0.17 280;
+
+    --sidebar: 0.16 0.03 220;
+    --sidebar-foreground: 0.92 0.02 200;
+    --sidebar-primary: 0.65 0.14 195;
+    --sidebar-primary-foreground: 0.13 0.02 220;
+    --sidebar-accent: 0.22 0.04 220;
+    --sidebar-accent-foreground: 0.92 0.02 200;
+    --sidebar-border: 1 0 0 / 12%;
+    --sidebar-ring: 0.65 0.14 195;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Outfit", sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Bricolage Grotesque", sans-serif;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 oklch(var(--primary) / 40%);
+  }
+  70% {
+    box-shadow: 0 0 0 10px oklch(var(--primary) / 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(var(--primary) / 0%);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s infinite;
+}
+
+/* Staggered delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-400 {
+  animation-delay: 400ms;
+}
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Risk level styles */
+.risk-low {
+  color: oklch(var(--risk-low));
+  background-color: oklch(var(--risk-low-bg));
+  border-color: oklch(var(--risk-low-border));
+}
+
+.risk-medium {
+  color: oklch(var(--risk-medium));
+  background-color: oklch(var(--risk-medium-bg));
+  border-color: oklch(var(--risk-medium-border));
+}
+
+.risk-high {
+  color: oklch(var(--risk-high));
+  background-color: oklch(var(--risk-high-bg));
+  border-color: oklch(var(--risk-high-border));
+}
+
+/* Medical card styling */
+.medical-card {
+  background: oklch(var(--card));
+  border: 1px solid oklch(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 3px oklch(var(--foreground) / 5%),
+    0 4px 12px oklch(var(--foreground) / 4%);
+  transition: box-shadow 0.2s ease;
+}
+
+.medical-card:hover {
+  box-shadow:
+    0 2px 6px oklch(var(--foreground) / 8%),
+    0 8px 24px oklch(var(--foreground) / 6%);
+}
+
+/* Gradient backgrounds */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    oklch(0.22 0.06 215 / 85%) 0%,
+    oklch(0.3 0.08 200 / 75%) 50%,
+    oklch(0.22 0.1 190 / 88%) 100%
+  );
+}
+
+.section-gradient {
+  background: linear-gradient(
+    180deg,
+    oklch(var(--teal-50)) 0%,
+    oklch(var(--background)) 100%
+  );
+}
