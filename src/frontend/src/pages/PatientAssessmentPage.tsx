@@ -6,52 +6,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import {
   Activity,
-  AlertCircle,
   Brain,
   CheckCircle,
-  CheckCircle2,
   ChevronDown,
   Clock,
   Droplets,
-  FileText,
   Heart,
   Loader2,
-  LogIn,
-  Printer,
   Shield,
   User,
   Weight,
-  X,
   Zap,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Assessment } from "../backend.d";
-import { RiskLevel } from "../backend.d";
 import { MetricChart } from "../components/MetricChart";
 import { Recommendations } from "../components/Recommendations";
 import { RiskBadge } from "../components/RiskBadge";
 import { RiskExplanation } from "../components/RiskExplanation";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import { useSubmitAssessment } from "../hooks/useQueries";
-import {
-  generateRiskExplanations,
-  getMetricChartData,
-  getRecommendations,
-  getRiskLabel,
-} from "../utils/riskUtils";
 
 interface FormData {
   patientName: string;
@@ -80,29 +59,6 @@ const INITIAL_FORM: FormData = {
   glucose: "",
 };
 
-const KEY_SYMPTOMS = [
-  "Chest Pain",
-  "Shortness of Breath",
-  "Fatigue",
-  "Headache",
-  "Dizziness",
-  "Blurred Vision",
-  "Frequent Urination",
-  "Numbness / Tingling",
-  "Nausea",
-  "Heart Palpitations",
-  "Excessive Thirst",
-  "Sweating",
-  "Swollen Ankles",
-  "Loss of Appetite",
-  "Irregular Heartbeat",
-  "Chest Tightness",
-  "Weakness",
-  "Memory Problems",
-  "Anxiety",
-  "Insomnia",
-];
-
 function validateForm(data: FormData): FormErrors {
   const errors: FormErrors = {};
   if (!data.patientName.trim()) errors.patientName = "Patient name is required";
@@ -124,366 +80,13 @@ function validateForm(data: FormData): FormErrors {
   return errors;
 }
 
-function getRiskBgTailwind(risk: RiskLevel): string {
-  switch (risk) {
-    case RiskLevel.low:
-      return "bg-emerald-50 border-emerald-200 text-emerald-800";
-    case RiskLevel.medium:
-      return "bg-orange-50 border-orange-200 text-orange-800";
-    case RiskLevel.high:
-      return "bg-red-50 border-red-200 text-red-800";
-    default:
-      return "bg-gray-50 border-gray-200 text-gray-800";
-  }
-}
-
-function getRiskPillColor(risk: RiskLevel): string {
-  switch (risk) {
-    case RiskLevel.low:
-      return "#16a34a";
-    case RiskLevel.medium:
-      return "#ea580c";
-    case RiskLevel.high:
-      return "#dc2626";
-    default:
-      return "#6b7280";
-  }
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Receipt Modal
-// ────────────────────────────────────────────────────────────────────
-interface ReceiptModalProps {
-  open: boolean;
-  onClose: () => void;
-  assessment: Assessment;
-  symptoms: string[];
-}
-
-function ReceiptModal({
-  open,
-  onClose,
-  assessment,
-  symptoms,
-}: ReceiptModalProps) {
-  const explanations = generateRiskExplanations(assessment);
-  const recommendations = getRecommendations(assessment.overallRisk);
-  const metrics = getMetricChartData(assessment);
-  const reportDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  const riskColor = getRiskPillColor(assessment.overallRisk);
-  const riskLabel = getRiskLabel(assessment.overallRisk);
-
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (!v) onClose();
-      }}
-    >
-      <DialogContent
-        className="max-w-2xl max-h-[90vh] overflow-y-auto p-0"
-        data-ocid="receipt.dialog"
-      >
-        {/* Print styles injected inline */}
-        <style>{`
-          @media print {
-            body > *:not(#print-receipt-root) { display: none !important; }
-            #print-receipt-root { display: block !important; }
-            .no-print { display: none !important; }
-            .receipt-page { box-shadow: none !important; margin: 0 !important; padding: 20px !important; }
-          }
-        `}</style>
-
-        <div
-          id="print-receipt-root"
-          className="receipt-page bg-white rounded-xl overflow-hidden"
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-primary to-primary/80 px-8 py-6 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-white fill-current" />
-                </div>
-                <div>
-                  <h2 className="font-display font-bold text-xl leading-none">
-                    Health Risk Assessment Report
-                  </h2>
-                  <p className="text-white/75 text-sm mt-1">
-                    HealthAI — AI-Powered Cardiovascular Analysis
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                data-ocid="receipt.close_button"
-                className="no-print w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="mt-4 text-white/70 text-sm">
-              Generated: {reportDate}
-            </div>
-          </div>
-
-          <div className="p-8 space-y-6">
-            {/* Patient Details */}
-            <section>
-              <h3 className="font-display font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                Patient Details
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  { label: "Patient Name", value: assessment.patientName },
-                  { label: "Age", value: `${assessment.age} years` },
-                  { label: "BMI", value: assessment.bmi.toFixed(1) },
-                  {
-                    label: "Systolic BP",
-                    value: `${assessment.systolicBP} mmHg`,
-                  },
-                  {
-                    label: "Diastolic BP",
-                    value: `${assessment.diastolicBP} mmHg`,
-                  },
-                  { label: "Glucose", value: `${assessment.glucose} mg/dL` },
-                ].map((item) => (
-                  <div key={item.label} className="bg-muted/40 rounded-lg p-3">
-                    <div className="text-xs text-muted-foreground mb-1">
-                      {item.label}
-                    </div>
-                    <div className="font-semibold text-sm text-foreground">
-                      {item.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Symptoms */}
-            <section>
-              <h3 className="font-display font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-primary" />
-                Reported Symptoms
-              </h3>
-              {symptoms.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">
-                  None reported
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {symptoms.map((s) => (
-                    <span
-                      key={s}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20"
-                    >
-                      <CheckCircle2 className="w-3 h-3" />
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Overall Risk */}
-            <section
-              className={cn(
-                "rounded-xl border p-5",
-                getRiskBgTailwind(assessment.overallRisk),
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-medium uppercase tracking-wide opacity-70 mb-1">
-                    Overall Risk Level
-                  </div>
-                  <div
-                    className="font-display font-bold text-2xl"
-                    style={{ color: riskColor }}
-                  >
-                    {riskLabel}
-                  </div>
-                </div>
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                  style={{ backgroundColor: riskColor }}
-                >
-                  {assessment.overallRisk === RiskLevel.low
-                    ? "LOW"
-                    : assessment.overallRisk === RiskLevel.medium
-                      ? "MED"
-                      : "HIGH"}
-                </div>
-              </div>
-            </section>
-
-            {/* Metrics Breakdown */}
-            <section>
-              <h3 className="font-display font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <Brain className="w-4 h-4 text-primary" />
-                Health Metrics Breakdown
-              </h3>
-              <div className="rounded-lg border overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/50 border-b">
-                      <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                        Metric
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                        Value
-                      </th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
-                        Risk Level
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {metrics.map((m, i) => (
-                      <tr
-                        key={m.name}
-                        className={cn(
-                          "border-b last:border-0",
-                          i % 2 === 0 ? "bg-white" : "bg-muted/20",
-                        )}
-                      >
-                        <td className="px-4 py-3 font-medium text-foreground">
-                          {m.name}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {m.score.toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold text-white"
-                            style={{ backgroundColor: m.fill }}
-                          >
-                            {getRiskLabel(m.risk)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* AI Explanations */}
-            <section>
-              <h3 className="font-display font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <Brain className="w-4 h-4 text-primary" />
-                AI Risk Explanations
-              </h3>
-              <ul className="space-y-2">
-                {explanations.map((exp) => (
-                  <li
-                    key={exp.text}
-                    className={cn(
-                      "flex items-start gap-2.5 p-3 rounded-lg border text-sm",
-                      exp.severity === "high"
-                        ? "bg-red-50 border-red-200 text-red-800"
-                        : exp.severity === "medium"
-                          ? "bg-orange-50 border-orange-200 text-orange-800"
-                          : "bg-green-50 border-green-200 text-green-800",
-                    )}
-                  >
-                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-70" />
-                    {exp.text}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* Recommendations */}
-            <section>
-              <h3 className="font-display font-bold text-base text-foreground mb-3 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                Recommended Actions
-              </h3>
-              <ul className="space-y-2">
-                {recommendations.map((rec) => (
-                  <li
-                    key={rec.text}
-                    className={cn(
-                      "flex items-start gap-2.5 p-3 rounded-lg border text-sm",
-                      rec.icon === "alert"
-                        ? "bg-red-50 border-red-100 text-red-800"
-                        : rec.icon === "warning"
-                          ? "bg-orange-50 border-orange-100 text-orange-800"
-                          : "bg-green-50 border-green-100 text-green-800",
-                    )}
-                  >
-                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0 opacity-70" />
-                    {rec.text}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* Footer */}
-            <div className="border-t pt-5 mt-2 text-center">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                <span className="font-semibold text-foreground">
-                  Generated by HealthAI
-                </span>{" "}
-                — For informational purposes only. This report does not
-                constitute medical advice.
-                <br />
-                Consult a qualified healthcare professional before making any
-                health decisions.
-              </p>
-            </div>
-          </div>
-
-          {/* Action buttons (no-print) */}
-          <div className="no-print px-8 pb-6 flex flex-col sm:flex-row gap-3 justify-end">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              data-ocid="receipt.cancel_button"
-              className="gap-2"
-            >
-              <X className="w-4 h-4" />
-              Close
-            </Button>
-            <Button
-              onClick={() => window.print()}
-              data-ocid="receipt.print_button"
-              className="gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              Print / Download
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────
-// Main Page
-// ────────────────────────────────────────────────────────────────────
 export function PatientAssessmentPage() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<FormErrors>({});
   const [result, setResult] = useState<Assessment | null>(null);
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [receiptOpen, setReceiptOpen] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const submitMutation = useSubmitAssessment();
-  const { identity, login, isInitializing } = useInternetIdentity();
-  const isLoggedIn = !!identity;
 
   const handleChange = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -492,25 +95,8 @@ export function PatientAssessmentPage() {
     }
   };
 
-  const toggleSymptom = (symptom: string) => {
-    setSelectedSymptoms((prev) =>
-      prev.includes(symptom)
-        ? prev.filter((s) => s !== symptom)
-        : [...prev, symptom],
-    );
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Reset any previous mutation error state before a new attempt
-    submitMutation.reset();
-
-    if (!isLoggedIn) {
-      toast.error("Please log in to submit an assessment.");
-      return;
-    }
-
     const validationErrors = validateForm(form);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -541,13 +127,6 @@ export function PatientAssessmentPage() {
   };
 
   const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const handleReset = () => {
-    setResult(null);
-    setForm(INITIAL_FORM);
-    setSelectedSymptoms([]);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -686,10 +265,7 @@ export function PatientAssessmentPage() {
                     autoComplete="name"
                   />
                   {errors.patientName && (
-                    <p
-                      className="text-xs text-destructive"
-                      data-ocid="assessment.name_error"
-                    >
+                    <p className="text-xs text-destructive">
                       {errors.patientName}
                     </p>
                   )}
@@ -717,12 +293,7 @@ export function PatientAssessmentPage() {
                       className={errors.age ? "border-destructive" : ""}
                     />
                     {errors.age && (
-                      <p
-                        className="text-xs text-destructive"
-                        data-ocid="assessment.age_error"
-                      >
-                        {errors.age}
-                      </p>
+                      <p className="text-xs text-destructive">{errors.age}</p>
                     )}
                   </div>
 
@@ -747,12 +318,7 @@ export function PatientAssessmentPage() {
                       className={errors.bmi ? "border-destructive" : ""}
                     />
                     {errors.bmi && (
-                      <p
-                        className="text-xs text-destructive"
-                        data-ocid="assessment.bmi_error"
-                      >
-                        {errors.bmi}
-                      </p>
+                      <p className="text-xs text-destructive">{errors.bmi}</p>
                     )}
                   </div>
                 </div>
@@ -781,10 +347,7 @@ export function PatientAssessmentPage() {
                       className={errors.systolicBP ? "border-destructive" : ""}
                     />
                     {errors.systolicBP && (
-                      <p
-                        className="text-xs text-destructive"
-                        data-ocid="assessment.systolic_error"
-                      >
+                      <p className="text-xs text-destructive">
                         {errors.systolicBP}
                       </p>
                     )}
@@ -812,10 +375,7 @@ export function PatientAssessmentPage() {
                       className={errors.diastolicBP ? "border-destructive" : ""}
                     />
                     {errors.diastolicBP && (
-                      <p
-                        className="text-xs text-destructive"
-                        data-ocid="assessment.diastolic_error"
-                      >
+                      <p className="text-xs text-destructive">
                         {errors.diastolicBP}
                       </p>
                     )}
@@ -843,111 +403,14 @@ export function PatientAssessmentPage() {
                     className={errors.glucose ? "border-destructive" : ""}
                   />
                   {errors.glucose && (
-                    <p
-                      className="text-xs text-destructive"
-                      data-ocid="assessment.glucose_error"
-                    >
-                      {errors.glucose}
-                    </p>
+                    <p className="text-xs text-destructive">{errors.glucose}</p>
                   )}
                 </div>
-
-                {/* ── Key Symptoms Section ── */}
-                <div className="space-y-3 pt-1">
-                  <div>
-                    <Label className="flex items-center gap-1.5 text-sm font-medium mb-0.5">
-                      <Activity className="w-3.5 h-3.5 text-muted-foreground" />
-                      Key Symptoms
-                      <span className="text-muted-foreground font-normal ml-1">
-                        (optional)
-                      </span>
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Select any symptoms you are currently experiencing
-                    </p>
-                  </div>
-
-                  <div
-                    className="grid grid-cols-2 sm:grid-cols-4 gap-2"
-                    data-ocid="assessment.symptoms_section"
-                  >
-                    {KEY_SYMPTOMS.map((symptom) => {
-                      const isSelected = selectedSymptoms.includes(symptom);
-                      return (
-                        <button
-                          type="button"
-                          key={symptom}
-                          onClick={() => toggleSymptom(symptom)}
-                          data-ocid={`assessment.symptom_toggle.${KEY_SYMPTOMS.indexOf(symptom) + 1}`}
-                          className={cn(
-                            "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-150 text-left",
-                            isSelected
-                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                              : "bg-background text-muted-foreground border-border hover:border-primary/40 hover:text-foreground hover:bg-primary/5",
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all",
-                              isSelected
-                                ? "bg-white/25 border-white/50"
-                                : "border-muted-foreground/40",
-                            )}
-                          >
-                            {isSelected && (
-                              <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
-                            )}
-                          </div>
-                          <span className="leading-tight">{symptom}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {selectedSymptoms.length > 0 && (
-                    <div className="flex items-center justify-between pt-1">
-                      <p className="text-xs text-primary font-medium">
-                        {selectedSymptoms.length} symptom
-                        {selectedSymptoms.length > 1 ? "s" : ""} selected
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedSymptoms([])}
-                        className="text-xs text-muted-foreground hover:text-destructive transition-colors underline-offset-2 hover:underline"
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Login notice if not logged in */}
-                {!isLoggedIn && !isInitializing && (
-                  <div
-                    data-ocid="assessment.login_notice"
-                    className="flex items-start gap-3 p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm"
-                  >
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
-                    <div>
-                      <span className="font-medium">Login required.</span>{" "}
-                      Please{" "}
-                      <button
-                        type="button"
-                        onClick={login}
-                        className="font-semibold underline underline-offset-2 hover:no-underline inline-flex items-center gap-1"
-                      >
-                        <LogIn className="w-3 h-3" />
-                        log in
-                      </button>{" "}
-                      to submit an assessment.
-                    </div>
-                  </div>
-                )}
 
                 <Button
                   type="submit"
                   data-ocid="assessment.submit_button"
-                  disabled={submitMutation.isPending || isInitializing}
+                  disabled={submitMutation.isPending}
                   className="w-full font-semibold h-11"
                   size="lg"
                 >
@@ -1035,46 +498,18 @@ export function PatientAssessmentPage() {
                 </CardContent>
               </Card>
 
-              {/* ── Receipt Generator Button ── */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.4 }}
-              >
-                <Card className="medical-card border shadow-medical bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-                  <CardContent className="pt-6 pb-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                      <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                        <FileText className="w-6 h-6 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-display font-bold text-base text-foreground mb-1">
-                          Download Your Health Report
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Generate a complete printable report with patient
-                          details, symptoms, risk analysis, and recommendations.
-                        </p>
-                      </div>
-                      <Button
-                        onClick={() => setReceiptOpen(true)}
-                        data-ocid="results.generate_report_button"
-                        className="gap-2 shrink-0"
-                      >
-                        <FileText className="w-4 h-4" />
-                        Generate Report
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
               {/* Reset button */}
               <div className="text-center">
                 <Button
                   variant="outline"
-                  data-ocid="results.new_assessment_button"
-                  onClick={handleReset}
+                  onClick={() => {
+                    setResult(null);
+                    setForm(INITIAL_FORM);
+                    formRef.current?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }}
                 >
                   Start New Assessment
                 </Button>
@@ -1083,16 +518,6 @@ export function PatientAssessmentPage() {
           </motion.section>
         )}
       </AnimatePresence>
-
-      {/* Receipt Modal */}
-      {result && (
-        <ReceiptModal
-          open={receiptOpen}
-          onClose={() => setReceiptOpen(false)}
-          assessment={result}
-          symptoms={selectedSymptoms}
-        />
-      )}
 
       {/* Feature Info Section */}
       <section className="py-16 section-gradient border-t border-border">
